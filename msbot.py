@@ -12,7 +12,7 @@ import sqlite3
 import schedule
 from datetime import datetime
 from selenium.webdriver.common.action_chains import ActionChains
-#import discord_webhook
+import discord_webhook as dw
 
 opt = Options()
 #linux
@@ -43,6 +43,7 @@ def out():
 def login():
     global driver
     print('logging in...')
+    dw.stext('Bot Started, logging in...')
     emailField=driver.find_element_by_xpath('//*[@id="i0116"]')
     emailField.click()
     emailField.send_keys(CREDS['email'])
@@ -193,6 +194,7 @@ def start_browser():
     if("login.microsoftonline.com" in driver.current_url):
         login()
 
+
 def attend(class_name,start_time,end_time):
 	time.sleep(4)
 	webcam = driver.find_element_by_xpath('//*[@id="page-content-wrapper"]/div[1]/div/calling-pre-join-screen/div/div/div[2]/div[1]/div[2]/div/div/section/div[2]/toggle-button[1]/div/button/span[1]')
@@ -204,10 +206,14 @@ def attend(class_name,start_time,end_time):
 	if(microphone.get_attribute('title')=='Mute microphone'):
 		microphone.click()
 	print('switched off microphone...')
+	dw.stext('camera and microphone is turned off...')
 	time.sleep(1)
 	joinnowbtn = driver.find_element_by_xpath('//*[@id="page-content-wrapper"]/div[1]/div/calling-pre-join-screen/div/div/div[2]/div[1]/div[2]/div/div/section/div[1]/div/div/button')
 	joinnowbtn.click()
 	print('Joining class SUCCESSFUL\n currently attending class...')
+	dw.stext('Joining class SUCCESSFUL\n currently attending class...')
+	
+	#dw.send_msg(class_name,'joined',start_time,end_time)
 	
 	
 	#now schedule leaving class
@@ -217,6 +223,7 @@ def attend(class_name,start_time,end_time):
 
 	time.sleep(class_running_time.seconds)
 	print('time to leave the class')
+	dw.stext('time to leave the class')
 
 	try:
 		driver.find_element_by_class_name("ts-calling-screen").click()
@@ -224,8 +231,13 @@ def attend(class_name,start_time,end_time):
 		time.sleep(1)
 		driver.find_element_by_xpath('//*[@id="hangup-button"]').click()
 		print("Class left")
+		dw.stext('Class left Successfully!')
+		#dw.send_msg(class_name,"left",start_time,end_time)
+
 	except:
 		print('seems the lecture has already stopped...')
+		dw.stext('seems the lecture has alreay stopped...')
+		#dw.send_msg(class_name,'left',start_time,end_time)
 
 def button_present():
 	try:
@@ -237,34 +249,40 @@ def button_present():
 def check_class(class_name,start_time,end_time):
 	present=button_present()
 	count=1
-	while count<=15:
+	while count<=2:
 		count+=1
 		if present:
 			count-=1
 			print('class found...')
 			driver.find_element_by_class_name("ts-calling-join-button").click()
 			print('now joining class...')
+			dw.stext('class found, now joining...')
 			attend(class_name,start_time,end_time)
 			break
 		else:
-			print('class not found...rechecking after few seconds')
+			print('class not found...rechecking after few minutes')
+			dw.stext('class not found...rechecking after few minutes')
 			driver.refresh()
 			time.sleep(20)
 			present=button_present()
 	
-	if count==6:
+	if count==3:
 		print('Seems there is no class, aborting this search')
+		#dw.send_msg(class_name,"noclass",start_time,end_time)
+
+
 
 def joinclass(class_name,start_time,end_time):
 	global driver
 	
-	print('in function join classsss')
+	print('In function join class: $$')
 	
 	try:
 		element = WebDriverWait(driver, 20).until(
 			EC.presence_of_element_located((By.ID, "left-rail-header")))
 	except:
 		print('class not found in list of teams! aborting this class')
+		dw.stext('class not found in list of teams! aborting this class')
 	
 	time.sleep(2)
 	classes_available = driver.find_elements_by_class_name("name-channel-type")
@@ -273,9 +291,11 @@ def joinclass(class_name,start_time,end_time):
 		print('checking i\'s')
 		if class_name.lower() in i.get_attribute('innerHTML').lower():
 			print("Subject Found...",class_name)
+			dw.stext("Subject Found..."+str(class_name))
 			i.click()
 			time.sleep(4)
 			print('Checking Class status...')
+			dw.stext('Checking Class status...')
 			check_class(i,start_time,end_time)
 			break
 
@@ -315,8 +335,14 @@ def join_specific():
 			joinclass(name,start_time,end_time)
 			print(name,start_time,end_time)
 
+def alert():
+	FORM="%H:%M:%S"
+	now=datetime.now()
+	vv=now.strftime(FORM)
+	dw.stext('bot is active at: ' + vv)
 
 def sched():
+	tuna=1
 	conn=sqlite3.connect('timetable.db')
 	c=conn.cursor()
 	for row in c.execute('SELECT * FROM timetable'):
@@ -325,6 +351,7 @@ def sched():
 		end_time=row[2]
 		day=row[3]
 
+		schedule.every().hour.do(alert)
 		if day.lower()=="monday":
 			schedule.every().monday.at(start_time).do(joinclass,name,start_time,end_time)
 			print("Scheduled class '%s' on %s at %s"%(name,day,start_time))
@@ -349,11 +376,11 @@ def sched():
 
 	#Start browser
 	start_browser()
-	tuna=1
+	
 	while True:
 		# Checks whether a scheduled task
 		# is pending to run or not
-		print("i am waiting for the class" + str(tuna))
+		print("i am waiting for the class: elapsed time " + str(tuna) + "s")
 		tuna+=1
 		schedule.run_pending()
 		time.sleep(1)
@@ -374,6 +401,7 @@ if __name__=="__main__":
 		elif(op==5):
 			delete_timetable()
 		elif(op==6):
+			dw.send_msg('TEST',"testing",'00:00','11:11')
 			join_specific()
 		else:
 			print("Invalid input!")
