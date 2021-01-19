@@ -32,7 +32,6 @@ opt.add_experimental_option("prefs", { \
  	 })
 
 
-
 driver = None
 URL = "https://teams.microsoft.com"
 PASS = 'S7Lf(J%xgUXt\"8\''
@@ -264,9 +263,12 @@ def attend(class_name,start_time,end_time):
 			dw.stext('Something went wrong in opening the team window,\ncan\'t find the expected window of class list.')
 			#dw.send_msg(class_name,'left',start_time,end_time)
 
-def button_present():
+def button_present(class_name):
 	try:
-		driver.find_element_by_class_name("ts-calling-join-button")
+		button=class_name.find_element_by_class_name("cle-marker")
+		button.click()
+		print('hey looks like the meeting has been started')
+		time.sleep(10)
 		return True
 	except:
 		return False
@@ -275,35 +277,35 @@ def check_class(class_name,start_time,end_time):
 	global driver
 	present=button_present(class_name)
 	count=1
-
-	time.sleep(5)
-	while count<=5:
+	time.sleep(10)
+	while count<=15:
 		count+=1
 		
 		if present:
 			count-=1
 			print('class found...')
+			time.sleep(10)
 			driver.find_element_by_class_name("ts-calling-join-button").click()
 			print('now joining class...')
 			dw.stext('class found, now joining...')
 			attend(class_name,start_time,end_time)
 			break
+			
+			
 		else:
 			print('class not found...rechecking after few minutes')
 			dw.stext('class not found...rechecking after few minutes')
-			driver.refresh()
 			time.sleep(20)
-			present=button_present()
+			present=button_present(class_name)
 	
-	if count==3:
+	if count==16:
 		print('Seems there is no class, aborting this search')
 		#dw.send_msg(class_name,"noclass",start_time,end_time)
 
 
 
 def joinclass(class_name,start_time,end_time):
-	global driver
-	
+	global driver	
 	print('In function join class: $$')
 	
 	try:
@@ -313,32 +315,32 @@ def joinclass(class_name,start_time,end_time):
 	except:
 		print('Something went wrong in opening the team window,\ncan\'t find the expected window of class list.')
 		dw.stext('Something went wrong in opening the team window,\ncan\'t find the expected window of class list.')
+		raise loop
 	
 	time.sleep(2)
 	try:
-		classes_available = driver.find_elements_by_class_name("name-channel-type")
-		#classes_available = driver.find_elements_by_class_name("team")
+		#classes_available = driver.find_elements_by_class_name("name-channel-type")
+		classes_available = driver.find_elements_by_class_name("team")
 	except:
-		print('Not able to find the element by class name [name-channel-type]')
-		dw.stext('Not able to find the element by class name [name-channel-type]')
-		return
-
-	for i in classes_available:
-		print('checking class names')
-		if class_name.lower() in i.get_attribute('innerHTML').lower():
-			print("Target Subject Found: ",class_name)
-			dw.stext("Subject Found..."+str(class_name))
-			try:
-				i.click()
-				print('clicked the class link')
-				time.sleep(10)
-			except:
-				print('The subject button is not interactable, Unable to click!')
-			time.sleep(5)
-			print('Checking Class status...')
-			dw.stext('Checking Class status...')
-			check_class(i,start_time,end_time)
-			break
+		print('Not able to find the element by class name [teams]')
+		dw.stext('Not able to find the element by class name [teams]')
+		raise loop 
+	try:
+		for i in classes_available:
+			print('checking class names')
+			if class_name.lower() in i.get_attribute('innerHTML').lower():
+				print("Target Subject Found: ",class_name)
+				dw.stext("Subject Found..."+str(class_name))
+				time.sleep(5)
+				print('Checking Class status...')
+				dw.stext('Checking Class status...')
+				check_class(i,start_time,end_time)
+				break
+	except NameError:
+		pass
+	except SystemExit:
+		out()
+	
 
 def join_specific():
 	print('\nSELECT ONE:')
