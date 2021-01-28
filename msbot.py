@@ -35,7 +35,7 @@ opt.add_experimental_option("prefs", { \
 driver = None
 URL = "https://teams.microsoft.com"
 PASS = 'S7Lf(J%xgUXt\"8\''
-CREDS = {'email':'email@gmail.com','passwd':PASS}
+CREDS = {'email':'email@email.com','passwd':'password'}
 
 def out():
     driver.close()
@@ -268,9 +268,13 @@ def button_present(class_name):
 		button=class_name.find_element_by_class_name("cle-marker")
 		button.click()
 		print('hey looks like the meeting has been started')
+		print('to prevernt joining please quit within 10 seconds...')
 		time.sleep(10)
+		print('returned ture')
 		return True
 	except:
+		class_name.click()
+		print('returned false')
 		return False
 
 def check_class(class_name,start_time,end_time):
@@ -278,7 +282,7 @@ def check_class(class_name,start_time,end_time):
 	present=button_present(class_name)
 	count=1
 	time.sleep(10)
-	while count<=15:
+	while count<=20:
 		count+=1
 		
 		if present:
@@ -295,7 +299,7 @@ def check_class(class_name,start_time,end_time):
 		else:
 			print('class not found...rechecking after few minutes')
 			dw.stext('class not found...rechecking after few minutes')
-			time.sleep(20)
+			time.sleep(30)
 			present=button_present(class_name)
 	
 	if count==16:
@@ -315,7 +319,7 @@ def joinclass(class_name,start_time,end_time):
 	except:
 		print('Something went wrong in opening the team window,\ncan\'t find the expected window of class list.')
 		dw.stext('Something went wrong in opening the team window,\ncan\'t find the expected window of class list.')
-		raise loop
+		raise NameError
 	
 	time.sleep(2)
 	try:
@@ -324,7 +328,7 @@ def joinclass(class_name,start_time,end_time):
 	except:
 		print('Not able to find the element by class name [teams]')
 		dw.stext('Not able to find the element by class name [teams]')
-		raise loop 
+		raise NameError
 	try:
 		for i in classes_available:
 			print('checking class names')
@@ -332,6 +336,7 @@ def joinclass(class_name,start_time,end_time):
 				print("Target Subject Found: ",class_name)
 				dw.stext("Subject Found..."+str(class_name))
 				time.sleep(5)
+				#i.click()
 				print('Checking Class status...')
 				dw.stext('Checking Class status...')
 				check_class(i,start_time,end_time)
@@ -387,7 +392,7 @@ def alert():
 
 def sched():
 	tuna=0
-	schedule.every(1).minute.do(alert)
+	schedule.every(30).minutes.do(alert)
 	print("scheduling classes...")
 	conn=sqlite3.connect('timetable.db')
 	c=conn.cursor()
@@ -427,9 +432,9 @@ def sched():
 		# Checks whether a scheduled task
 		# is pending to run or not
 		print("i am waiting for the class: elapsed time " + str(tuna) + "s")
-		tuna+=5
+		tuna+=30
 		schedule.run_pending()
-		time.sleep(5)
+		time.sleep(30)
 
 if __name__=="__main__":
 	# joinclass("Maths","15:13","15:15","sunday")
