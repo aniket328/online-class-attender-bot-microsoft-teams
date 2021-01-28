@@ -3,7 +3,7 @@ from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.options import Options
-#import chromedriver_binary
+import chromedriver_binary
 import time
 import re
 import os.path
@@ -13,6 +13,8 @@ import schedule
 from datetime import datetime
 from selenium.webdriver.common.action_chains import ActionChains
 import discord_webhook as dw
+from sys import exit
+import os
 
 opt = Options()
 #linux
@@ -33,12 +35,14 @@ opt.add_experimental_option("prefs", { \
 driver = None
 URL = "https://teams.microsoft.com"
 PASS = 'S7Lf(J%xgUXt\"8\''
-CREDS = {'email':'email@gmail.com','passwd':PASS}
+CREDS = {'email':'email@email.com','passwd':'password'}
 
 def out():
     driver.close()
     driver.quit()
     exit()
+    quit()
+    os._exit()
 
 def login():
     global driver
@@ -57,23 +61,22 @@ def login():
         passField.send_keys(CREDS['passwd'])
         driver.find_element_by_xpath('//*[@id="idSIButton9"]').click()
         time.sleep(5)
-        print('Staying signed in...')
+        print('just getting there...')
         driver.find_element_by_xpath('//*[@id="idSIButton9"]').click()
-        print('Login SUCCESS !!')
-        print('make sure you have changed the class view in your teams account to list view ')
+        print('LOGIN SUCCESS !!')
+        print('[expected `LIST VIEW` of your teams]')
         time.sleep(5)
 
 
     except:
-        print('invalid email, kindly correct credentials in CRED Dictionary for help refer README.md')
-        out()
-
+	    print('invalid email, kindly correct credentials in CRED Dictionary for help refer README.md')
+	    raise SystemExit
 
 def createDB():
     conn=sqlite3.connect('timetable.db')
     c=conn.cursor()
     #create table
-    c.execute('''CREATE TABLE IF NOT EXISTS timetable (class text, start_time text, end_time text,day text)''')
+    c.execute('''CREATE TABLE IF NOT EXISTS timetable (class text, start_time text, end_time text,day text, ID text)''')
     conn.commit()
     conn.close()
     print("Created timetable Database")
@@ -108,37 +111,39 @@ def add_timetable():
 	while not(validate_day(day.strip())):
 		print("Invalid input, try again")
 		end_time = input("Enter day (Monday/Tuesday/Wednesday..etc) : ")
-
+	
+	eyed=input("Enter any ID for the class: ")
 
 	conn = sqlite3.connect('timetable.db')
 	c=conn.cursor()
 
 	# Insert a row of data
-	c.execute("INSERT INTO timetable VALUES ('%s','%s','%s','%s')"%(name,start_time,end_time,day))
+	c.execute("INSERT INTO timetable VALUES ('%s','%s','%s','%s','%s')"%(name,start_time,end_time,day,eyed))
 
 	conn.commit()
 	conn.close()
-
-	print("Class added to database\n")
+	print(f"\nClass ID: {eyed}\nClass Name: {name}\nStart time: {start_time}\nEnd time: {end_time}\nDay: {day}")
+	print("\nAdded to the database!\n")
 
 def view_timetable():
 	conn = sqlite3.connect('timetable.db')
 	c=conn.cursor()
 	num=0
+	print('\t Class Name \tStart Time \t End Time \t Day \t ID')
 	for row in c.execute('SELECT * FROM timetable'):
 		num+=1
 		print(str(num)+'. ',row)
 	conn.close()
 
 def update_timetable():
-	class_name = input("Enter the class name you want to update: ")
+	eyed = input("Enter the class ID you want to update: ")
 	conn = sqlite3.connect('timetable.db')
 	c = conn.cursor()
-	c.execute("SELECT * FROM timetable WHERE class = :class", {"class":class_name})
+	c.execute("SELECT * FROM timetable WHERE ID = :id", {"id":eyed})
 	results = c.fetchall()
 
 	if len(results) == 0:
-		print(f"Found no such class named {class_name}!")
+		print(f"Found no such class with ID: {eyed}!")
 		return None
 
 	while (True):
@@ -158,41 +163,46 @@ def update_timetable():
 			end_time = input("Enter new day (Monday/Tuesday/Wednesday..etc) : ")
 
 
-		c.execute("UPDATE timetable SET start_time = :new_start_time WHERE class = :class", {"new_start_time":start_time, "class":class_name})
-		c.execute("UPDATE timetable SET end_time = :new_end_time WHERE class = :class", {"new_end_time":end_time, "class":class_name})
-		c.execute("UPDATE timetable SET day = :new_day WHERE class = :class", {"new_day":day, "class":class_name})
+		c.execute("UPDATE timetable SET start_time = :new_start_time WHERE ID = :class", {"new_start_time":start_time, "class":eyed})
+		c.execute("UPDATE timetable SET end_time = :new_end_time WHERE ID = :class", {"new_end_time":end_time, "class":eyed})
+		c.execute("UPDATE timetable SET day = :new_day WHERE ID = :class", {"new_day":day, "class":eyed})
 		conn.commit()
 		conn.close()
-		print(f"Class {class_name} updated with new start time as {start_time}, new end time as {end_time} and new day as {day} successfully. ")
+		print(f"\nClass with ID: {eyed} \nUpdated with:\nNew start time: {start_time}, \nNew end time: {end_time},\nNew day: {day} \nSUCCESSFUL! ")
 		break
 
 def delete_timetable():
-	class_name = input("Enter the name of the class you want to delete: ")
+	class_name = input("Enter ID of the class you want to delete: ")
 	conn = sqlite3.connect("timetable.db")
 	c = conn.cursor()
-	c.execute("SELECT * FROM timetable WHERE class = :class", {"class":class_name})
+	c.execute("SELECT * FROM timetable WHERE ID = :class", {"class":class_name})
 	results = c.fetchall()
 
 	if len(results) == 0:
-		print(f"Found no such class named {class_name}!")
+		print(f"Found no class with ID {class_name}!")
 		return None
 
 	_ = input(f"Are you sure you want to delete class {class_name}? This action cant be undone. Press any key to continue. ")
-	c.execute("DELETE FROM timetable WHERE class = :class", {"class":class_name})
+	c.execute("DELETE FROM timetable WHERE ID = :class", {"class":class_name})
 	conn.commit()
 	conn.close()
-	print(f"Deleted entry {class_name} from timetable successully. ")
+	print(f"Deleted Class with ID '{class_name}' Successully! ")
 
 def start_browser():
     global driver
-    #try:    
-    driver=webdriver.Chrome(options=opt)
-    print('getting URL')
-    driver.get(URL)
-    print('awaiting login promt')
-    WebDriverWait(driver,10000).until(EC.visibility_of_element_located((By.TAG_NAME,'body')))
-    if("login.microsoftonline.com" in driver.current_url):
-        login()
+    try:    
+	    print("starting browser...")
+	    driver=webdriver.Chrome(options=opt)
+	    print('getting URL')
+	    driver.get(URL)
+	    print('awaiting login promt')
+	    WebDriverWait(driver,10000).until(EC.visibility_of_element_located((By.TAG_NAME,'body')))
+	    if("login.microsoftonline.com" in driver.current_url):
+		    login()
+    except SystemExit:
+	    out()
+    except:
+	    print('Error loading the browser driver, check function start_browser()')
 
 
 def attend(class_name,start_time,end_time):
@@ -232,72 +242,110 @@ def attend(class_name,start_time,end_time):
 		driver.find_element_by_xpath('//*[@id="hangup-button"]').click()
 		print("Class left")
 		dw.stext('Class left Successfully!')
-		#dw.send_msg(class_name,"left",start_time,end_time)
+		try:
+			driver.get(URL)
+			WebDriverWait(driver, 20).until(
+				EC.presence_of_element_located((By.ID, "left-rail-header")))
+		except:
+			print('Something went wrong in opening the team window,\ncan\'t find the expected window of class list.')
+			dw.stext('Something went wrong in opening the team window,\ncan\'t find the expected window of class list.')
+			#dw.send_msg(class_name,"left",start_time,end_time)
 
 	except:
 		print('seems the lecture has already stopped...')
 		dw.stext('seems the lecture has alreay stopped...')
-		#dw.send_msg(class_name,'left',start_time,end_time)
+		try:
+			driver.get(URL)
+			WebDriverWait(driver, 20).until(
+				EC.presence_of_element_located((By.ID, "left-rail-header")))
+		except:
+			print('Something went wrong in opening the team window,\ncan\'t find the expected window of class list.')
+			dw.stext('Something went wrong in opening the team window,\ncan\'t find the expected window of class list.')
+			#dw.send_msg(class_name,'left',start_time,end_time)
 
-def button_present():
+def button_present(class_name):
 	try:
-		tele=driver.find_element_by_class_name("ts-calling-join-button")
+		button=class_name.find_element_by_class_name("cle-marker")
+		button.click()
+		print('hey looks like the meeting has been started')
+		print('to prevernt joining please quit within 10 seconds...')
+		time.sleep(10)
+		print('returned ture')
 		return True
 	except:
+		class_name.click()
+		print('returned false')
 		return False
 
 def check_class(class_name,start_time,end_time):
-	present=button_present()
+	global driver
+	present=button_present(class_name)
 	count=1
-	while count<=2:
+	time.sleep(10)
+	while count<=20:
 		count+=1
+		
 		if present:
 			count-=1
 			print('class found...')
+			time.sleep(10)
 			driver.find_element_by_class_name("ts-calling-join-button").click()
 			print('now joining class...')
 			dw.stext('class found, now joining...')
 			attend(class_name,start_time,end_time)
 			break
+			
+			
 		else:
 			print('class not found...rechecking after few minutes')
 			dw.stext('class not found...rechecking after few minutes')
-			driver.refresh()
-			time.sleep(20)
-			present=button_present()
+			time.sleep(30)
+			present=button_present(class_name)
 	
-	if count==3:
+	if count==16:
 		print('Seems there is no class, aborting this search')
 		#dw.send_msg(class_name,"noclass",start_time,end_time)
 
 
 
 def joinclass(class_name,start_time,end_time):
-	global driver
-	
+	global driver	
 	print('In function join class: $$')
 	
 	try:
-		element = WebDriverWait(driver, 20).until(
+		driver.get(URL)
+		WebDriverWait(driver, 20).until(
 			EC.presence_of_element_located((By.ID, "left-rail-header")))
 	except:
-		print('class not found in list of teams! aborting this class')
-		dw.stext('class not found in list of teams! aborting this class')
+		print('Something went wrong in opening the team window,\ncan\'t find the expected window of class list.')
+		dw.stext('Something went wrong in opening the team window,\ncan\'t find the expected window of class list.')
+		raise NameError
 	
 	time.sleep(2)
-	classes_available = driver.find_elements_by_class_name("name-channel-type")
-
-	for i in classes_available:
-		print('checking i\'s')
-		if class_name.lower() in i.get_attribute('innerHTML').lower():
-			print("Subject Found...",class_name)
-			dw.stext("Subject Found..."+str(class_name))
-			i.click()
-			time.sleep(4)
-			print('Checking Class status...')
-			dw.stext('Checking Class status...')
-			check_class(i,start_time,end_time)
-			break
+	try:
+		#classes_available = driver.find_elements_by_class_name("name-channel-type")
+		classes_available = driver.find_elements_by_class_name("team")
+	except:
+		print('Not able to find the element by class name [teams]')
+		dw.stext('Not able to find the element by class name [teams]')
+		raise NameError
+	try:
+		for i in classes_available:
+			print('checking class names')
+			if class_name.lower() in i.get_attribute('innerHTML').lower():
+				print("Target Subject Found: ",class_name)
+				dw.stext("Subject Found..."+str(class_name))
+				time.sleep(5)
+				#i.click()
+				print('Checking Class status...')
+				dw.stext('Checking Class status...')
+				check_class(i,start_time,end_time)
+				break
+	except NameError:
+		pass
+	except SystemExit:
+		out()
+	
 
 def join_specific():
 	print('\nSELECT ONE:')
@@ -316,11 +364,11 @@ def join_specific():
 
 	for row in c.execute('SELECT * FROM timetable'):
 		cc+=1
-		name=row[0]
-		start_time=row[1]
-		end_time=row[2]
-		day=row[3]
 		if cc==want:
+			name=row[0]
+			start_time=row[1]
+			end_time=row[2]
+			day=row[3]
 			break
 	conn.close()
 	if want > cc:
@@ -341,8 +389,11 @@ def alert():
 	vv=now.strftime(FORM)
 	dw.stext('bot is active at: ' + vv)
 
+
 def sched():
-	tuna=1
+	tuna=0
+	schedule.every(30).minutes.do(alert)
+	print("scheduling classes...")
 	conn=sqlite3.connect('timetable.db')
 	c=conn.cursor()
 	for row in c.execute('SELECT * FROM timetable'):
@@ -351,7 +402,7 @@ def sched():
 		end_time=row[2]
 		day=row[3]
 
-		schedule.every().hour.do(alert)
+		
 		if day.lower()=="monday":
 			schedule.every().monday.at(start_time).do(joinclass,name,start_time,end_time)
 			print("Scheduled class '%s' on %s at %s"%(name,day,start_time))
@@ -381,9 +432,9 @@ def sched():
 		# Checks whether a scheduled task
 		# is pending to run or not
 		print("i am waiting for the class: elapsed time " + str(tuna) + "s")
-		tuna+=1
+		tuna+=30
 		schedule.run_pending()
-		time.sleep(1)
+		time.sleep(30)
 
 if __name__=="__main__":
 	# joinclass("Maths","15:13","15:15","sunday")
