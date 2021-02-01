@@ -29,7 +29,6 @@ There are few things you need to configure before running this bot.
  - Install requirements.txt `pip install -r requirements.txt`
  - Run cmd (to install chrome binary): ```pip3 install chromedriver-binary-auto```
 
- 
 
 ## Run the bot
 
@@ -37,3 +36,6 @@ There are few things you need to configure before running this bot.
  - Press ctrl+C to quit
 
 Written on Python3.
+
+ # YOUTUBE REFERENCE TUTORIAL
+ https://youtu.be/wY7ffeCT3Ro
