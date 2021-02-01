@@ -25,7 +25,7 @@ There are few things you need to configure before running this bot.
 
 ## Install
 
- - Clone the repository ```git clone https://github.com/aniket328/online-class-attender-bot-microsoft-teams```
+ - Clone the repository ```https://github.com/aniket328/online-class-attender-bot-microsoft-teams.git```
  - Install requirements.txt `pip install -r requirements.txt`
  - Run cmd (to install chrome binary): ```pip3 install chromedriver-binary-auto```
 
