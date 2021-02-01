@@ -34,7 +34,7 @@ opt.add_experimental_option("prefs", { \
 
 driver = None
 URL = "https://teams.microsoft.com"
-PASS = 'S7Lf(J%xgUXt\"8\''
+
 CREDS = {'email':'email@id.com','passwd':'your pass'}
 
 def out():
