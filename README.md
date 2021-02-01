@@ -1,9 +1,9 @@
 # Requirements
 
-Linux, Windows or Mac OS
-Python Installed on the machine
-Google Chrome installed
-(This script uses google chrome driver to run the web-browser, you can use mozilla or any other browser with their respective driver and slight modificaiton in the code, if you face any issue let me know in the issues box, i will try to fix them asap.)
+- Linux, Windows or Mac OS 
+- Python Installed on the machine
+- Google Chrome installed
+- (This script uses google chrome driver to run the web-browser, you can use mozilla or any other browser with their respective driver and slight modificaiton in the code, if you face any issue let me know in the issues box, i will try to fix them asap.)
 
 
 # Microsoft Teams Online Class Attender
