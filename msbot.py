@@ -35,7 +35,7 @@ opt.add_experimental_option("prefs", { \
 driver = None
 URL = "https://teams.microsoft.com"
 PASS = 'S7Lf(J%xgUXt\"8\''
-CREDS = {'email':'email@email.com','passwd':'password'}
+CREDS = {'email':'email@id.com','passwd':'your pass'}
 
 def out():
     driver.close()
@@ -336,7 +336,7 @@ def joinclass(class_name,start_time,end_time):
 				print("Target Subject Found: ",class_name)
 				dw.stext("Subject Found..."+str(class_name))
 				time.sleep(5)
-				#i.click()
+				i.click()
 				print('Checking Class status...')
 				dw.stext('Checking Class status...')
 				check_class(i,start_time,end_time)
