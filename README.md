@@ -9,7 +9,6 @@
 
 This bot attends the online classes (or meetings) held on Microsoft teams, according to the given timetable.
 
-
 ## Configure
 
 There are few things you need to configure before running this bot.
