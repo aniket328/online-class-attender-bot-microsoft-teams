@@ -1,5 +1,6 @@
 # Requirements
 
+
 - Linux, Windows or Mac OS 
 - Python Installed on the machine
 - Google Chrome installed
